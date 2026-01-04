@@ -5,7 +5,7 @@ namespace App\Services\QLS;
 use App\DTOs\Product\ProductCombinationDTO;
 use Illuminate\Support\Facades\Cache;
 
-final class ProductService
+class ProductService
 {
     public function __construct(
         private readonly QLSApiService $api,
