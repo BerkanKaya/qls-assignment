@@ -1,0 +1,25 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: qls_mysql
+    ports:
+      - "127.0.0.1:${FORWARD_DB_PORT:-3306}:3306"
+    environment:
+      MYSQL_DATABASE: "${DB_DATABASE}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+    volumes:
+      - qls_mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: qls_redis
+    ports:
+      - "127.0.0.1:${FORWARD_REDIS_PORT:-6379}:6379"
+    volumes:
+      - qls_redis_data:/data
+
+volumes:
+  qls_mysql_data:
+  qls_redis_data:
