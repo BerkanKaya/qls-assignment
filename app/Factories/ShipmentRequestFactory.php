@@ -8,15 +8,18 @@ use App\DTOs\Shipment\ShipmentProductDTO;
 
 class ShipmentRequestFactory
 {
+    public function __construct(
+        private readonly string $brandId
+    ) {}
+
     public function build(
         OrderDTO $order,
         int $productCombinationId,
-        string $brandId,
         int $weight
     ): CreateShipmentDTO {
         return new CreateShipmentDTO(
             $productCombinationId,
-            $brandId,
+            $this->brandId,
             $order->number,
             $weight,
             $order->billingAddress,

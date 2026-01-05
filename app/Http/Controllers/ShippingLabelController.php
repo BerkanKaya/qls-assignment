@@ -42,7 +42,6 @@ class ShippingLabelController extends Controller
             $shipmentDto = $this->shipmentRequestFactory->build(
                 $order,
                 (int) $data['product_combination_id'],
-                config('qls.brand_id'),
                 (int) $data['weight']
             );
             $shipment = $this->shipmentService->create($shipmentDto);
