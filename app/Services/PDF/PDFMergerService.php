@@ -44,7 +44,12 @@ class PDFMergerService
 
     private function importTemplate(Fpdi $pdf, string $path): array
     {
-        $pdf->setSourceFile($path);
+        $pages = $pdf->setSourceFile($path);
+
+        if ($pages !== 1) {
+            throw new PDFGenerationException("Expected a single-page PDF, got {$pages} pages.");
+        }
+
         $templateId = $pdf->importPage(1);
         $size = $pdf->getTemplateSize($templateId);
 

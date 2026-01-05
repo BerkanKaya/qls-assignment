@@ -20,6 +20,13 @@ Alles wordt samengevoegd tot **1 A4-PDF**.
 - **PDFMergerService**: merge’t pakbon + label naar één PDF
 - **DTO’s + Factory**: vertaalt form input naar payload/DTO’s zodat de services schoon blijven
 
+### PDF layout & multi-page edge case
+De pakbon wordt gegenereerd met DomPDF. Bij uitzonderlijk veel orderregels kan DomPDF automatisch meerdere pagina’s maken.
+Omdat deze tool/assignment bewust een **single-page A4 output** nastreeft, heb ik dit edge case expliciet afgevangen:
+
+- Orderregels worden **gegroepeerd** (zelfde SKU/EAN/naam) zodat de pakbon vrijwel altijd binnen één A4 past.
+- `PDFMergerService` **forceert single-page input**: als de pakbon of het label toch meerdere pagina’s bevat, stop ik het duidelijke met een foutmelding in plaats van stil content weg te laten.
+
 ## Install & Run (lokaal)
 
 ### Vereisten

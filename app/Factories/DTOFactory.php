@@ -20,6 +20,11 @@ final class DTOFactory
 
     private function lines(array $lines): array
     {
+        return $this->groupByProduct($this->mapToOrderLines($lines));
+    }
+
+    private function mapToOrderLines(array $lines): array
+    {
         return array_map(
             fn(array $line) => new OrderLineDTO(
                 $line['sku'],
@@ -28,6 +33,39 @@ final class DTOFactory
                 $line['ean'] ?? null
             ),
             $lines
+        );
+    }
+
+    private function groupByProduct(array $dtos): array
+    {
+        $grouped = [];
+
+        foreach ($dtos as $dto) {
+            $key = $this->productKey($dto);
+
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = $dto;
+                continue;
+            }
+
+            $grouped[$key] = $this->mergeQuantities($grouped[$key], $dto);
+        }
+
+        return array_values($grouped);
+    }
+    
+    private function productKey(OrderLineDTO $dto): string
+    {
+        return $dto->sku . '|' . ($dto->ean ?? '') . '|' . $dto->name;
+    }
+
+    private function mergeQuantities(OrderLineDTO $existing, OrderLineDTO $incoming): OrderLineDTO
+    {
+        return new OrderLineDTO(
+            $existing->sku,
+            $existing->name,
+            $existing->amountOrdered + $incoming->amountOrdered,
+            $existing->ean
         );
     }
 }
