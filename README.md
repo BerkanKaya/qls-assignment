@@ -1,59 +1,106 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# QLS Shipping Label Builder
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Mini webtool om een shipment aan te maken via de QLS API en vervolgens een PDF te downloaden met:
+- **Packing slip** (pakbon)
+- **QLS label PDF**
+Alles wordt samengevoegd tot **1 A4-PDF**.
 
-## About Laravel
+## Stack
+- Laravel (PHP)
+- Blade + Tailwind (Vite) + Alpine.js
+- Redis cache (product combinations)
+- PDF: DomPDF (packing slip) + FPDI (merge)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Architectuur (kort)
+- **Controller**: dun, alleen request → services → response/download
+- **ProductService**: haalt **product_combinations** op via `/companies/{companyId}/products` en bewaart ze **10 minuten in Redis cache**
+- **ShipmentService**: maakt shipment aan via `/v2/companies/{companyId}/shipments`
+- **LabelService**: download label (QLS retourneert altijd JSON + base64 in `data`) en decodeert naar PDF-bytes
+- **PackingSlipService**: genereert pakbon PDF vanuit Blade view
+- **PDFMergerService**: merge’t pakbon + label naar één PDF
+- **DTO’s + Factory**: vertaalt form input naar payload/DTO’s zodat de services schoon blijven
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Install & Run (lokaal)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Vereisten
+- PHP + Composer
+- Node.js + npm
+- (optioneel) Docker voor Redis
 
-## Learning Laravel
+### 1) Install
+```bash
+composer install
+npm install
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 2) Env
+Kopieer `.env.example` naar `.env`.  
+De enige waarden die je zelf moet invullen/aanpassen zijn de **QLS\_*** variabelen.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```env
+APP_NAME="QLS Assignment"
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost:8000
 
-## Laravel Sponsors
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
 
-### Premium Partners
+CACHE_STORE=redis
+QUEUE_CONNECTION=sync
+SESSION_DRIVER=file
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+REDIS_CLIENT=phpredis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+FORWARD_REDIS_PORT=6379
 
-## Contributing
+QLS_API_BASE_URL=https://api.pakketdienstqls.nl
+QLS_API_USERNAME=...
+QLS_API_PASSWORD=...
+QLS_COMPANY_ID=...
+QLS_BRAND_ID=...
+QLS_DEFAULT_PRODUCT_COMBINATION_ID=...
+QLS_API_TIMEOUT=10
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3) App key
+```bash
+php artisan key:generate
+```
 
-## Code of Conduct
+### 4) Frontend
+Dev:
+```bash
+npm run dev
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 5) Run
+```bash
+php artisan serve
+```
 
-## Security Vulnerabilities
+Submit het formulier → je krijgt direct een **PDF download** met pakbon + label.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Redis (product combinations cache)
 
-## License
+Als je Redis gebruikt:
+```env
+CACHE_STORE=redis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+FORWARD_REDIS_PORT=6379
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Start Redis (optioneel via Docker):
+```bash
+docker compose up -d
+```
+## Tests
+```bash
+php artisan test
+```
