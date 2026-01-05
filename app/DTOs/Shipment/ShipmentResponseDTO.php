@@ -5,10 +5,10 @@ namespace App\DTOs\Shipment;
 final readonly class ShipmentResponseDTO
 {
     public function __construct(
-        public readonly string $id,
-        public readonly string $labelPdfUrl,
-        public readonly ?string $barcode,
-        public readonly ?string $trackingUrl
+        public string $id,
+        public string $labelPdfUrl,
+        public ?string $barcode,
+        public ?string $trackingUrl
     ) {
     }
 

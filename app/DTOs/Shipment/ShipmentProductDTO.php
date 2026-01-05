@@ -5,11 +5,11 @@ namespace App\DTOs\Shipment;
 final readonly class ShipmentProductDTO
 {
     public function __construct(
-        public readonly ?int $productId,
-        public readonly int $amount,
-        public readonly ?string $ean = null,
-        public readonly ?string $name = null,
-        public readonly ?string $sku = null
+        public ?int $productId,
+        public int $amount,
+        public ?string $ean = null,
+        public ?string $name = null,
+        public ?string $sku = null
     ) {
     }
 
